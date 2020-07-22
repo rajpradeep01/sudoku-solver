@@ -32,10 +32,12 @@ def getValues(imagePath):
 
 	largestCnt
 	M = cv2.getPerspectiveTransform(orderPoints(pIn = largestCnt), np.array([[0, 0], [180, 0], [180, 180], [0, 180]], dtype = np.float32))
-	warped = cv2.warpPerspective(image, M, (180, 180))
-	image = cv2.cvtColor(warped, cv2.COLOR_GRAY2BGR)
 
-	cv2.imshow('disp', image)
+	image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 5, 2)
+	warped = cv2.warpPerspective(image, M, (180, 180))
+	warped = cv2.morphologyEx(warped, cv2.MORPH_OPEN, np.ones((1, 1)))
+
+	cv2.imshow('disp', warped)
 	cv2.waitKey(0)
 
 if __name__ == '__main__':
