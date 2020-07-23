@@ -13,3 +13,4 @@ A sudoku solver that reads data from images.
 	- [ ] merge modules
 - [ ] solver
 - [ ] merge modules
+- [ ] solution overlay on live feed?
