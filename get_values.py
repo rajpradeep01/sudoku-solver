@@ -1,6 +1,7 @@
 def getValues(imagePath):
 	import cv2
 	import numpy as np
+	from classifier import Classifier
 
 	def orderPoints(pIn):
 		pIn.reshape(4, 2)
@@ -30,15 +31,23 @@ def getValues(imagePath):
 				largestCnt = approx
 				largestArea = area
 
-	largestCnt
-	M = cv2.getPerspectiveTransform(orderPoints(pIn = largestCnt), np.array([[0, 0], [180, 0], [180, 180], [0, 180]], dtype = np.float32))
+	M = cv2.getPerspectiveTransform(orderPoints(pIn = largestCnt), np.array([[0, 0], [252, 0], [252, 252], [0, 252]], dtype = np.float32))
 
-	image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 5, 2)
-	warped = cv2.warpPerspective(image, M, (180, 180))
+	image = cv2.GaussianBlur(image, (5, 5), 0)
+	image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 5, 2)
+	warped = cv2.warpPerspective(image, M, (252, 252))
 	warped = cv2.morphologyEx(warped, cv2.MORPH_OPEN, np.ones((1, 1)))
 
+
+	classifier = Classifier('mnist-8.onnx')
+	values = [[classifier.predict(warped[i*28:(i+1)*28, j*28:(j+1)*28]) for j in range(9)]for i in range(9)]
+	for row in values:
+		for number in row:
+			print(number, end=' ')
+		print()
 	cv2.imshow('disp', warped)
 	cv2.waitKey(0)
+	return values
 
 if __name__ == '__main__':
 	from tkinter import Tk
@@ -46,4 +55,5 @@ if __name__ == '__main__':
 
 	Tk().withdraw()
 	filename = askopenfilename()
-	getValues(filename)
+	values = getValues(filename)
+	# print(values)
