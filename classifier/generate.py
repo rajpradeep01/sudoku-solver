@@ -21,7 +21,7 @@ def generate(number):
 				rr = (np.random.normal(0.5, 0.5, (14, 14)))
 				rr[2:12, 4:10] = 0
 				rr = cv2.resize(rr, (28, 28))
-				cvimage[np.where(rr > 0.6+0.1*j)] = True
+				cvimage[np.where(rr > 0.85+0.05*j)] = True
 
 			buff.append(cvimage)
 	return np.array(buff)

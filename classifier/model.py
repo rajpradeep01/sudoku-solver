@@ -17,7 +17,7 @@ class Digits(Dataset):
 		data = np.load(path)
 		self.X = np.vstack([data[key] for key in data.files])
 		self.y = list(itertools.chain.from_iterable([[int(name[-1]) for _ in range(len(data[name]))] for name in data.files]))
-		self.transform = transforms.RandomPerspective()
+		self.transform = transforms.RandomPerspective(0.1)
 		self.len = len(self.y)
 
 	def __len__(self):
@@ -36,8 +36,8 @@ class Digits(Dataset):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.conv1 = nn.Conv2d(1, 32, 3)
+        self.conv2 = nn.Conv2d(32, 64, 3)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
         self.fc1 = nn.Linear(9216, 128)
@@ -102,10 +102,10 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=35, metavar='N',
-                        help='number of epochs to train (default: 35)')
-    parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
-                        help='learning rate (default: 1.0)')
+    parser.add_argument('--epochs', type=int, default=50, metavar='N',
+                        help='number of epochs to train (default: 50)')
+    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+                        help='learning rate (default: 0.05)')
     parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
                         help='Learning rate step gamma (default: 0.7)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
