@@ -6,10 +6,8 @@ class Classifier():
 		self.model = cv2.dnn.readNetFromONNX(path)
 
 	def preProcess(self, image):
-		clearBorder = np.zeros_like(image).astype(np.uint8)
+		clearBorder = np.zeros_like(image)
 		clearBorder[4:24, 4:24] = image[4:24, 4:24]
-		# cv2.imshow('dd', clearBorder)
-		# cv2.waitKey(0)
 		clearBorder = clearBorder.astype(np.float32) / 255.
 		clearBorder = cv2.dnn.blobFromImage(clearBorder)
 		self.input = clearBorder
@@ -32,7 +30,7 @@ class Classifier():
 		return classId#, confidence
 
 if __name__ == '__main__':
-	model = Classifier('mnist-8.onnx')
+	model = Classifier('classifier/sudoku-digits.onnx')
 	print('init')
 	print(model.predict(cv2.imread('mnist/datasets_1272_2280_testSample_testSample_img_100.jpg', 0)))
 	print(model.predict(cv2.imread('mnist/datasets_1272_2280_testSample_testSample_img_107.jpg', 0)))

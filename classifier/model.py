@@ -1,12 +1,37 @@
 from __future__ import print_function
 import argparse
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 from torch.optim.lr_scheduler import StepLR
+from PIL import Image
 
+class Digits(Dataset):
+	def __init__(self, path):
+		import itertools
+		super(Digits, self).__init__()
+		data = np.load(path)
+		self.X = np.vstack([data[key] for key in data.files])
+		self.y = list(itertools.chain.from_iterable([[int(name[-1]) for _ in range(len(data[name]))] for name in data.files]))
+		self.transform = transforms.RandomPerspective()
+		self.len = len(self.y)
+
+	def __len__(self):
+		return self.len
+
+	def __getitem__(self, index):
+		sample = self.X[index].astype(np.uint8)*255
+		sample = Image.fromarray(sample, 'L')
+		sample = self.transform(sample)
+		sample = np.array(sample).astype(np.float32).reshape((1, 28, 28))
+		sample = torch.tensor(sample)
+		sample /= 255.
+		return sample, self.y[index]
+		
 
 class Net(nn.Module):
     def __init__(self):
@@ -72,13 +97,13 @@ def test(model, device, test_loader):
 
 def main():
     # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+    parser = argparse.ArgumentParser(description='PyTorch MNIST')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=14, metavar='N',
-                        help='number of epochs to train (default: 14)')
+    parser.add_argument('--epochs', type=int, default=35, metavar='N',
+                        help='number of epochs to train (default: 35)')
     parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
                         help='learning rate (default: 1.0)')
     parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
@@ -105,18 +130,11 @@ def main():
         kwargs.update({'num_workers': 1,
                        'pin_memory': True,
                        'shuffle': True},
-                     )
-
-    transform=transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-        ])
-    dataset1 = datasets.MNIST('../data', train=True, download=True,
-                       transform=transform)
-    dataset2 = datasets.MNIST('../data', train=False,
-                       transform=transform)
+                       )
+    
+    dataset1 = Digits('compressed/data.npz')
     train_loader = torch.utils.data.DataLoader(dataset1,**kwargs)
-    test_loader = torch.utils.data.DataLoader(dataset2, **kwargs)
+    test_loader = torch.utils.data.DataLoader(dataset1, **kwargs)
 
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
@@ -130,6 +148,9 @@ def main():
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
 
+    dummy_input = torch.randn(1, 1, 28, 28)
+    model.cpu()
+    torch.onnx.export(model, dummy_input, "sudoku-digits.onnx")
 
 if __name__ == '__main__':
     main()
